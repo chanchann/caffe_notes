@@ -81,7 +81,13 @@ https://stackoverflow.com/questions/48056566/could-not-resolve-host-download-doc
 
 2. 添加权限
 
-未完成
+sudo groupadd docker
+
+sudo gpasswd -a ${USER} docker
+
+sudo service docker restart
+
+newgrp - docker
 
 - 修改docker hub为国内镜像
 
@@ -91,7 +97,67 @@ https://stackoverflow.com/questions/48056566/could-not-resolve-host-download-doc
 
 https://github.com/docker/compose/releases
 
+## 安装驱动
 
+https://www.nvidia.com/Download/index.aspx
+
+用ppa安装
+
+sudo add-apt-repository -y ppa:graphics-drivers/ppa
+
+sudo apt-get update
+
+sudo apt-get install -y nvidia-xxx
+
+## 安装 nvidia-docker
+
+https://github.com/NVIDIA/nvidia-docker
+
+## docker 使用
+
+https://www.runoob.com/docker/docker-hello-world.html
+
+docker run -i -t ubuntu:15.10 /bin/bash
+
+cat /proc/version
+
+docker run -d ubuntu:15.10 /bin/sh -c "while true; do echo hello world; sleep 1; done"
+
+### 
+
+docker logs xxx(id)
+
+docker stop xxx
+
+docker start
+
+docker restart
+
+docker ps
+
+docker ps -a
+
+### 后台运行
+
+docker run -itd --name ubuntu-test ubuntu /bin/bash
+
+docker exec -it id /bin/bash
+
+### 删除
+
+docker rm -f id
+
+清理掉所有处于终止状态的容器：docker container prune
+
+### 镜像使用
+
+docker images
+
+docker pull xx:xx
+
+docker search xx 
+
+docker rmi hello-world 删除镜像
 
 
 
