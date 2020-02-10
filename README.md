@@ -159,5 +159,12 @@ docker search xx
 
 docker rmi hello-world 删除镜像
 
+### 使用GPU
+
+docker run -it --gpus all bvlc/caffe:gpu /bin/bash
+
+### 使用
+
+docker run -itd --gpus all -v /home/maker/ysy/data:/mydata bvlc/caffe:gpu /bin/bash
 
 
