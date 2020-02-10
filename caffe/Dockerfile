@@ -2,7 +2,7 @@ FROM bvlc/caffe:gpu
 
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && apt-get clean \ 
-    && apt-get update
+    && apt-get update \
     && pip install -U pip \
     && pip install -U scipy \
     && pip install -U scikit-learn \
