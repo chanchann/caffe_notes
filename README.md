@@ -168,3 +168,18 @@ docker run -it --gpus all bvlc/caffe:gpu /bin/bash
 docker run -itd --gpus all -v /home/maker/ysy/data:/mydata bvlc/caffe:gpu /bin/bash
 
 docker build -t caffe:0.1 .
+
+## 坑
+
+docker 中 apt-get update时
+
+在/etc/apt/路径下，将sources.list.d文件更名为sources.list.d.odd
+
+mv sources.list.d sources.list.d.odd
+
+因为sources.list.d文件夹下有cuda和nvidia的访问地址，apt-get update的时候访问不了那些地址就会卡住
+
+### 查找cpp include路径
+
+gcc -v -E -x c++ -
+
