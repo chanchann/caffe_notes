@@ -183,3 +183,39 @@ mv sources.list.d sources.list.d.odd
 
 gcc -v -E -x c++ -
 
+### ssh连接docker container
+
+sudo apt-get install openssh-server #安装ssh服务器
+
+service ssh status # 查看ssh服务启动情况
+
+service ssh start # 启动ssh服务
+
+vi /etc/ssh/sshd_config
+
+PermitRootLogin without-password 改为 PermitRootLogin yes
+
+#PasswordAuthentication yes 改为 PasswordAuthentication yes
+
+service ssh restart # 重启动ssh服务
+
+docker ps #查看正在运行的container
+**找到所要保存的container的container id，假设为xxxxxx**
+docker commit xxxxxxxx tomjerry/foobar
+（注：tomjerry/foobar为要保存的新镜像的名字，可任意写
+
+docker run -it -p 50001:22 tomjerry/foobar /bin/bash
+
+service ssh start
+
+ssh root@宿主机ip -p 50001(映射port)
+
+## 坑
+
+Docker的Ubuntu镜像安装的容器无ifconfig命令和ping命令
+
+apt-get update
+
+apt install net-tools       # ifconfig 
+
+apt install iputils-ping     # ping
