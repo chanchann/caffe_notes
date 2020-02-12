@@ -208,6 +208,8 @@ docker run -it -p 50001:22 tomjerry/foobar /bin/bash
 
 service ssh start
 
+设置密码 passwd root
+
 ssh root@宿主机ip -p 50001(映射port)
 
 ## 坑
@@ -219,3 +221,4 @@ apt-get update
 apt install net-tools       # ifconfig 
 
 apt install iputils-ping     # ping
+
