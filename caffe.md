@@ -231,4 +231,78 @@ for (int i = 0; i < count; ++i) {
 
 同理学习sigmoid/tanh
 
+```cpp
+//sigmoid 
+for (int i = 0; i < count; ++i) {
+    const Dtype sigmoid_x = top_data[i];
+    bottom_diff[i] = top_diff[i] * sigmoid_x * (1. - sigmoid_x);
+}
+```
+
+```cpp
+for (int i = 0; i < count; ++i) {
+    tanhx = top_data[i];
+    bottom_diff[i] = top_diff[i] * (1 - tanhx * tanhx);
+}
+```
+
+### 查定位宏命令
+
+grep -nHR "STUB_GPU"
+
+-n 显示行号
+
+-H 显示文件名
+
+-R 递归查找子目录
+
+### 梳理layer
+
+https://blog.csdn.net/langb2014/article/details/50988275
+
+## caffe的数据结构
+
+### Caffe数据结构
+
+### Blob
+
+四维数组用于存储和交换数据(num, channels, height, width)
+
+用于存储数据或权值(data) , 权值增益（diff)
+
+```cpp
+//using namespace caffe;
+Blob<float> a;
+cout << "Size:" << a.shape_string() << endl;
+a.Reshape(1, 2, 3, 4);
+cout << "Size:" << a.shape_string() << endl;
+```
+
+创建Blob后，可通过 mutable_cpu[gpu]_data[diff]修改内部值
+
+```cpp
+float* p  = a.mutable_cpu_data();
+for(int i = 0; i< a.count(), i++){
+    p[i] = i;
+}
+for(int u = 0; u < a.num(), u++){
+    for(int v = 0; v < a.channels(); v++){
+        for(int w = 0; w < a.height(); w++){
+            for(int x = 0; x < a.width(); x++){
+                cout << a.data_at(u, v, w, x) << endl;
+            }
+        }
+    }
+}
+
+```
+
+Blob能够自动同步CPU/GPU数据
+
+支持计算L1,L2范数
+
+```cpp
+cout << "L1: " << a.asum_data() << endl;
+cout << << endl;
+```
 
