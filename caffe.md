@@ -59,7 +59,7 @@ void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
 
 高效存储和分发科学数据的新型数据格式
 
-/src/caffe/uitl/hdf5.cpp
+/src/caffe/util/hdf5.cpp
 
 /include/caffe/util/hdf5.hpp
 
@@ -98,7 +98,7 @@ cd data/mnist
 下载的二进制文件只有转化为LEVELDB or LMDB 才能被Caffe识别
 
 ./examples/mnist/create_mnist.sh
-
+l.
 生成
 
 /caffe/examples/mnist/mnist_train_lmdb
@@ -120,4 +120,115 @@ example/mnist/train_lenet.sh
 --solver=examples/mnist/lenet_solver_rmsprop.prototxt
 
 指定了训练超参数文件
+
+学会看log
+
+### 用训练好的模型预测
+
+./build/tools/caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -iterations 100
+
+./build/tools/caffe   : commands
+
+flags:
+
+train 
+
+test 
+
+device_query
+
+time
+
+Flags from tools/caffe.cpp
+
+### 源码阅读
+
+关注三个子目录: include/ , src/, tools/
+
+先阅读src/caffe/proto/caffe.proto
+
+1. 了解基本数据结构内存对象和磁盘文件的一一映射关系
+
+2. 看头文件
+
+3. 针对性看cpp和cu文件，一般根据新的需求派生新的类
+
+4. 工具
+
+### 激活函数
+
+src/caffe/proto/caffe.proto
+
+```cpp
+message ReLUParameter {
+    // leaky relu 参数
+  optional float negative_slope = 1 [default = 0];
+  enum Engine {   // 计算引擎选择
+    DEFAULT = 0;  
+    CAFFE = 1;   // caffe实现
+    CUDNN = 2;   // CUDNN实现
+  }
+  optional Engine engine = 2 [default = DEFAULT];
+}
+
+message SigmoidParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
+}
+
+message TanHParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
+}
+```
+
+include/caffe/layers/neuron_layer.hpp 
+
+非线性层的鼻祖NeuronLayer，派生于Layer类, 特点是输出blob(y)和输入blob(x)尺寸相同
+
+
+### 复习虚函数 && 纯虚函数
+
+https://www.zhihu.com/question/23971699
+
+virtual void funtion1()=0; 纯虚函数一定没有定义 ， 错
+
+多数情况下不给定义，但其实我们可以给纯虚函数提供定义。不过函数体必须定义在类的外部，也就是说，我们不能在类的内部为一个=0的函数提供函数体  p541 cpp primer 5th
+
+## c++ explicit
+
+https://www.cnblogs.com/this-543273659/archive/2011/08/02/2124596.html
+
+## c++ public/protected/private
+
+保护成员变量或函数与私有成员十分相似，但有一点不同，保护成员在派生类（即子类）中是可访问的。
+
+## rely layer 
+
+include/caffe/layers/relu_layer.hpp 
+
+同理学习sigmoid, tanh
+
+## relu实现
+
+/src/caffe/layers/relu_layer.cpp
+
+```cpp
+//反向传播关键点
+for (int i = 0; i < count; ++i) {
+    //根据链式法则，后一层的误差乘以导函数得到前一层的误差
+    bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
+        + negative_slope * (bottom_data[i] <= 0));
+```
+
+同理学习sigmoid/tanh
+
 
