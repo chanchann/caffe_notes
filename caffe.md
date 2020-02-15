@@ -303,6 +303,63 @@ Blob能够自动同步CPU/GPU数据
 
 ```cpp
 cout << "L1: " << a.asum_data() << endl;
-cout << << endl;
+cout << "L2: " << a.sumsq_data() << endl;
 ```
+
+```cpp
+float* p = a.mutable_cpu_data();
+float* q = a.mutable_cpu_diff();
+for(int i = 0; i < a.count(); i++){
+    p[i] = i;
+    q[i] = a.count() - 1 - i;
+}
+a.Update();  //执行Update操作，将diff和data融合
+             //这也是CNN权值更新步骤的最终实施者
+             // Update实现了data = data - diff，在权值更新时深入研究
+```
+
+```cpp
+//将Blob内部值保存到磁盘，或者从磁盘载入内存，
+//可以分别通过ToProto(), FromProto()
+//#include<caffe/util/io.hpp>
+BlobProto bp; // 构造BlobProto对象
+a.toProto(&bp, true); //将a序列化，连同diff(默认不带)
+WriteProtoToBinaryFile(bp, "a.blob"); //写入磁盘文件"a.blob"
+BlobProto bp2;  //构造一个新的BlobProto对象
+ReadProtoFromBinaryFileOrDie("a.blob", &bp2); //读取磁盘文件
+Blob<float> b;  // 新建一个Blob对象
+b.FromProto(bp2, true); //从序列化对象bp2中克隆b(连通形状)
+
+/*
+BlobProto对象实现了磁盘，内存间数据通信，对于保存，载入训练好的模型weight
+*/
+```
+
+### 数据结构描述
+
+src/caffe/proto/caffe.proto  5:29
+
+思考：为什么不直接声明BlobShape, BlobProto为结构体，而要用ProtoBuffer这种格式
+
+1. 结构体的序列化和反序列化需要额外的编程操作，难以做到接口标准化
+
+2. 结构体包含变长数据(一般用指向某个内存地址的指针),需要更加细致的工作保证数据完整
+
+### Blob
+
+/include/caffe/blob.hpp,封装了SyncedMemory类，作为基本计算单元服务Layer,Net,Solver
+
+### shared_ptr 
+
+### SyncedMemory
+
+/include/caffe/syncedmem.hpp
+
+
+
+
+
+
+
+
 
