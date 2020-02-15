@@ -16,6 +16,9 @@ namespace caffe {
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
+
+// 如果在GPU模式，且CUDA使能，那么主机内存会以页锁定内存方式分配
+// 使用cudaMallcHost()函数，对于单GPU的性能提升不明显，但多GPU很明显
 inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
@@ -33,6 +36,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
+//与CaffeMallocHost对应
 inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
@@ -54,6 +58,8 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
  *
  * TODO(dox): more thorough description.
  */
+
+// 该类负责存储分配以及主机和设备间同步
 class SyncedMemory {
  public:
   SyncedMemory();
@@ -65,8 +71,11 @@ class SyncedMemory {
   void set_gpu_data(void* data);
   void* mutable_cpu_data();
   void* mutable_gpu_data();
+  // 状态机变量，表示四种状态，未初始化，CPU数据有效，GPU数据有效，已同步
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
+  // 获得当前状态机变量
   SyncedHead head() const { return head_; }
+  // 获得当前存储空间尺寸
   size_t size() const { return size_; }
 
 #ifndef CPU_ONLY
@@ -76,16 +85,16 @@ class SyncedMemory {
  private:
   void check_device();
 
-  void to_cpu();
+  void to_cpu(); // 数据同步到CPU
   void to_gpu();
-  void* cpu_ptr_;
+  void* cpu_ptr_; // 位于CPU的数据指针
   void* gpu_ptr_;
-  size_t size_;
-  SyncedHead head_;
-  bool own_cpu_data_;
+  size_t size_;   // 存储空间大小
+  SyncedHead head_;   // 状态机变量
+  bool own_cpu_data_;   // 标志是否拥有CPU数据所有权
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
-  int device_;
+  int device_;  // GPU设备号
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

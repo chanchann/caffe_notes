@@ -349,11 +349,18 @@ src/caffe/proto/caffe.proto  5:29
 
 /include/caffe/blob.hpp,封装了SyncedMemory类，作为基本计算单元服务Layer,Net,Solver
 
+/src/caffe/blob.cpp
+
 ### shared_ptr 
 
 ### SyncedMemory
 
 /include/caffe/syncedmem.hpp
+
+### 条件编译
+
+https://blog.csdn.net/fanyun_01/article/details/84584063
+
 
 
 
