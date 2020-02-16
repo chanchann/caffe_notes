@@ -157,6 +157,11 @@ class Layer {
    *
    * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
    */
+  // 反向传播函数，给定Top Blob误差梯度，计算Bottom Blob误差梯度
+  // top 其diff域来自上一层的误差梯度
+  // propagate_down,多路开关，与Bottom矢量维度相同，每个值表示是否将误差梯度传递到对应Bottom
+  // bottom ,其diff域需要由该函数计算得到。
+  // 该函数会调用相应设备包装函数，如Backward_cpu,Backward_gpu来实现真正的计算过程,派生类负责实现
   inline void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
@@ -164,6 +169,7 @@ class Layer {
   /**
    * @brief Returns the vector of learnable parameter blobs.
    */
+  // 返回Layer内部可训练的权值，偏置项Blob向量
   vector<shared_ptr<Blob<Dtype> > >& blobs() {
     return blobs_;
   }
@@ -171,16 +177,19 @@ class Layer {
   /**
    * @brief Returns the layer parameter.
    */
+  // 返回Layer初始化参数(ProtoBuffer提供)
   const LayerParameter& layer_param() const { return layer_param_; }
 
   /**
    * @brief Writes the layer parameter to a protocol buffer
    */
+  // Layer初始化参数写入ProtoBuffer缓冲区
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
 
   /**
    * @brief Returns the scalar loss associated with a top blob at a given index.
    */
+  // 返回与某个Top Blob相关的表标量loss值
   inline Dtype loss(const int top_index) const {
     return (loss_.size() > top_index) ? loss_[top_index] : Dtype(0);
   }
@@ -188,6 +197,7 @@ class Layer {
   /**
    * @brief Sets the loss associated with a top blob at a given index.
    */
+  // 设置与某个Top Blob相关的表标量loss值
   inline void set_loss(const int top_index, const Dtype value) {
     if (loss_.size() <= top_index) {
       loss_.resize(top_index + 1, Dtype(0));
@@ -198,6 +208,7 @@ class Layer {
   /**
    * @brief Returns the layer type.
    */
+  // 返回层类型字符串，便于识别，由派生类负责实现
   virtual inline const char* type() const { return ""; }
 
   /**
