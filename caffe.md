@@ -361,11 +361,22 @@ src/caffe/proto/caffe.proto  5:29
 
 https://blog.csdn.net/fanyun_01/article/details/84584063
 
+### INSTANTIATE_CLASS ???
+
+https://www.cnblogs.com/neopenx/p/5187586.html
 
 
+## Layer
 
+### 数据结构描述
 
+caffe.proto
 
+message LayerParameter{
+
+}
+
+/include/caffe/layer.hpp
 
 
 
