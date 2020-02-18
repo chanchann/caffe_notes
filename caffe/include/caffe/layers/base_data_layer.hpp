@@ -66,7 +66,7 @@ class BasePrefetchingDataLayer :
       const vector<Blob<Dtype>*>& top);
 
  protected:
-  virtual void InternalThreadEntry();
+  virtual void InternalThreadEntry(); // 内部线程入口
   virtual void load_batch(Batch<Dtype>* batch) = 0;
 
   vector<shared_ptr<Batch<Dtype> > > prefetch_;
