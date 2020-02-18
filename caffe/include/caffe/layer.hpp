@@ -218,6 +218,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some exact number of bottom blobs.
    */
+  // 返回该Layer需要输入的Blob数目，-1表示不关心，由派生类实现
   virtual inline int ExactNumBottomBlobs() const { return -1; }
   /**
    * @brief Returns the minimum number of bottom blobs required by the layer,
@@ -242,6 +243,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some exact number of top blobs.
    */
+  // 返回该Layer需要输出的Blob数目，-1表示不关心，由派生类实现
   virtual inline int ExactNumTopBlobs() const { return -1; }
   /**
    * @brief Returns the minimum number of top blobs required by the layer,
@@ -266,6 +268,7 @@ class Layer {
    * This method should be overridden to return true if your layer expects an
    * equal number of bottom and top blobs.
    */
+  // 返回该Layer是否有相同的输入/输出Blob，由派生类负责实现
   virtual inline bool EqualNumBottomTopBlobs() const { return false; }
 
   /**
@@ -276,6 +279,9 @@ class Layer {
    * blobs to fulfill the requirement specified by ExactNumTopBlobs() or
    * MinTopBlobs().
    */
+  //返回是否允许匿名Top Blob，由该层Layer自动创建
+  //若为真，在Net::init()函数中创建足够多的匿名Top Blob
+  //来满足该Layer ExactNumTopBlobs(),MinTopBlobs()需求
   virtual inline bool AutoTopBlobs() const { return false; }
 
   /**
@@ -286,6 +292,8 @@ class Layer {
    * setting and backpropagate to blob i only if it needs gradient information
    * (as is done when force_backward == false).
    */
+  //返回某些Bottom Blob是否允许强制反向传播
+  //如果AllowForcebackward(i) == false，将会忽略force_backward设定
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     return true;
   }
@@ -297,6 +305,8 @@ class Layer {
    * You can safely ignore false values and always compute gradients
    * for all parameters, but possibly with wasteful computation.
    */
+  //指定该Layer是否计算相对权值或bias的梯度
+  //具体相对谁由param_id定
   inline bool param_propagate_down(const int param_id) {
     return (param_propagate_down_.size() > param_id) ?
         param_propagate_down_[param_id] : false;
@@ -305,6 +315,7 @@ class Layer {
    * @brief Sets whether the layer should compute gradients w.r.t. a
    *        parameter at a particular index given by param_id.
    */
+  // 设置该Layer是否计算相对权值或bias的梯度
   inline void set_param_propagate_down(const int param_id, const bool value) {
     if (param_propagate_down_.size() <= param_id) {
       param_propagate_down_.resize(param_id + 1, true);
@@ -315,17 +326,17 @@ class Layer {
 
  protected:
   /** The protobuf that stores the layer parameters */
-  LayerParameter layer_param_;
+  LayerParameter layer_param_; // 保存layer参数的Protobuffer对象
   /** The phase: TRAIN or TEST */
-  Phase phase_;
+  Phase phase_;  //Layer当前所处阶段，可选TRAIN或TEST
   /** The vector that stores the learnable parameters as a set of blobs. */
-  vector<shared_ptr<Blob<Dtype> > > blobs_;
+  vector<shared_ptr<Blob<Dtype> > > blobs_;  // layer内部权值或偏置项，以Blob形式组织
   /** Vector indicating whether to compute the diff of each param blob. */
-  vector<bool> param_propagate_down_;
+  vector<bool> param_propagate_down_; //标志位，是否计算对应参数的误差梯度
 
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
-  vector<Dtype> loss_;
+  vector<Dtype> loss_; // 标志位，在目标函数中，是否每个Top Blob都有非零权重
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -364,6 +375,7 @@ class Layer {
    * and top Blobs provided as input match the expected numbers specified by
    * the {ExactNum,Min,Max}{Bottom,Top}Blobs() functions.
    */
+  // 校验输入/输出Blob数目是否满足layer需求
   virtual void CheckBlobCounts(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top) {
     if (ExactNumBottomBlobs() >= 0) {
@@ -407,29 +419,42 @@ class Layer {
    * Called by SetUp to initialize the weights associated with any top blobs in
    * the loss function. Store non-zero loss weights in the diff blob.
    */
+  //该函数在Layer的SetUp函数中被调用，主要目的是初始化与Top Blob相关的loss权重
+  //放到Top Blob的diff域，实际由Forward计算loss
+  //loss_weight == 0,表示当前层不参与loss函数计算，大部分Layer属于这一类
+  //loss_weight == 1,表示当前层参与loss函数计算，损失层(LossLayer)属于这一类
   inline void SetLossWeights(const vector<Blob<Dtype>*>& top) {
+    //从Protobuffer对象中获得layer参数(loss_weight_sizes)
     const int num_loss_weights = layer_param_.loss_weight_size();
     if (num_loss_weights) {
+      //loss_weight参数个数应当与Top Blob数目相同，或者不要loss weight参数
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
           "unspecified or specified once per top blob.";
+      //遍历每个Top Blob
       for (int top_id = 0; top_id < top.size(); ++top_id) {
+        //从Protobuffer对象中拿到loss_weight实际值(0 or 1)
         const Dtype loss_weight = layer_param_.loss_weight(top_id);
+        //如果为0则跳过
         if (loss_weight == Dtype(0)) { continue; }
-        this->set_loss(top_id, loss_weight);
+        //如果为1则对网络做相关设置
+        this->set_loss(top_id, loss_weight); //本地记录loss_weight值
         const int count = top[top_id]->count();
         Dtype* loss_multiplier = top[top_id]->mutable_cpu_diff();
+        //将loss_weight值写入Top Blob的diff域，传递到其他需要使用的地方，实现远程同步
         caffe_set(count, loss_weight, loss_multiplier);
       }
     }
   }
 
  private:
-  DISABLE_COPY_AND_ASSIGN(Layer);
+  DISABLE_COPY_AND_ASSIGN(Layer); //禁用拷贝构造函数和赋值运算函数
 };  // class Layer
 
 // Forward and backward wrappers. You should implement the cpu and
 // gpu specific implementations instead, and should not change these
 // functions.
+//forward/backward函数包装，不需要修改这两个函数
+//派生的时候只需要改写foward[backward]_cpu[gpu]
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -440,9 +465,12 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     Forward_cpu(bottom, top);
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
-      const int count = top[top_id]->count();
+      const int count = top[top_id]->count(); 
+      //若为LossLayer,则已经通过Forward函数计算出全局损失函数，放在Top Blob data域
       const Dtype* data = top[top_id]->cpu_data();
+      //若loss_weight不为0，则已经在SetLossWeight函数中将loss权重放在Top Blob diff域
       const Dtype* loss_weights = top[top_id]->cpu_diff();
+      //计算加权之后的loss
       loss += caffe_cpu_dot(count, data, loss_weights);
     }
     break;
@@ -483,6 +511,7 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 }
 
 // Serialize LayerParameter to protocol buffer
+//将层配置参数序列化为ProtoBuffer
 template <typename Dtype>
 void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
   param->Clear();
