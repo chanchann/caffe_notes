@@ -378,6 +378,128 @@ message LayerParameter{
 
 /include/caffe/layer.hpp
 
+/src/caffe/layer.cpp
 
 
+## Net
+
+Net是一张图纸，对应的描述文件为*.prototxt
+
+选择自带CaffeNet模型 models/bvlc_reference_caffenet/deploy.prototxt
+
+```cpp
+//net_demo.cpp
+#include <vector>
+#include <iostream>
+#include <caffe/net.hpp>
+using namespace std;
+using namespace caffe;
+
+int main(){
+  std::string proto("deploy.prototxt");
+  Net<float> nn(proto, caffe::TEST);
+  vector<string> bn = nn.blob_names();  //获取Net中所有Blob对象名
+  for(int i = 0; i < bn.size(); i++){
+    cout << "Blob #" << i << ":" << bn[i] << endl;
+  }
+  return 0;
+}
+```
+
+### 数据结构描述
+
+还是从caffe.proto看起
+
+message NetParameter
+
+include/caffe/net.hpp
+
+Blob提供了数据容器的机制，而Layer通过不用的策略使用该容器数据，实现多元化的计算处理过程，又提供了深度学习的基本算法。
+
+Thinking:
+
+1. Net初始化如何统计所需的存储空间？
+
+net.cpp的init()里：
+
+memory_used_ += top_vecs_[layer_id][top_id]->count();
+
+2. cpp中如何禁用某个类的拷贝构造函数和赋值运算符重载？
+
+Caffe 代码中定义了宏 DISABLE_COPY_AND_ASSIGN，利用了 C++ 语言特性，即只要将类拷贝构造函数与赋值运算符重载函数声明为私有就能禁用这两个函数。
+
+该宏定义位于 include/caffe/common.hpp 、
+
+```cpp
+#define DISABLE_COPY_AND_ASSIGN(classname) \
+private:\
+  classname(const classname&);\
+  classname& operator=(const classname&)
+```
+
+## IO模块
+
+### 数据读取层
+
+Caffe数据读取层(DataLayer)是Layer的派生类。除了读取LMDB，LEVELDB之外，也可以直接从原始图像直接读取(ImageDataLayer)
+
+### 数据结构描述
+
+caffe.proto:
+
+message DataParameter
+
+include/caffe/layers/base_data_layer.hpp
+
+src/caffe/layers/base_data_layer.cpp
+
+## 复习cpp多继承
+
+http://c.biancheng.net/view/2277.html
+
+## 数据变换器
+
+caffe数据变换器(DataTransformer)主要提供了对原始输入图像的预处理方法
+
+还是先看数据结构描述
+
+message TransformationParameter
+
+include/caffe/data_transformer.hpp
+
+src/caffe/data_transformer.cpp
+
+Datum用来从LMDB/LEVELDB中读取数据，或将数据写入，和BlobProto有相似功能，只是BlobProto用于模型权值序列化/反序列化，而Datum专为数据或特征图
+
+## Caffe模型
+
+模型又三部分组成:可学习参数，结构参数，训练超参数
+
+可学习参数在内存中使用Blob保存，必要时以二进制ProtoBuffer文件(*.caffemodel)存磁盘
+
+结构参数ProtoBuffer(*.prototxt),
+
+训练超参数ProtoBuffer(*.prototxt)
+
+### 磁盘上的表示
+
+.solverstate and .caffemodel
+
+solver.cpp
+
+string Solver<Dtype>::SnapshotToBinaryProto()
+
+sgd_solver.cpp
+
+void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto()
+
+### 前向、后向运算
+
+损失函数 caffe.proto找到Softmax消息定义
+
+include/caffe/loss_layers.hpp
+
+### caffe最优化求解过程
+
+message SolverParameter
 
