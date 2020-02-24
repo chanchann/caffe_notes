@@ -167,7 +167,9 @@ docker run -it --gpus all bvlc/caffe:gpu /bin/bash
 
 docker run -itd --gpus all -v /home/maker/ysy/data:/mydata bvlc/caffe:gpu /bin/bash
 
-docker build -t caffe:0.1 .
+docker build -t caffe:0.1 . 
+
+sudo docker build -t video:gpu --rm=true .
 
 ## 坑
 
