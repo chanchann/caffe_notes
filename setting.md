@@ -208,7 +208,7 @@ docker commit xxxxxxxx tomjerry/foobar
 
 docker run -it -p 50001:22 tomjerry/foobar /bin/bash
 
-service ssh start
+service ssh start //进入后一定注意打开
 
 设置密码 passwd root
 
@@ -224,3 +224,40 @@ apt install net-tools       # ifconfig
 
 apt install iputils-ping     # ping
 
+## 使用
+
+sudo docker build -t c3d:v1 --rm=true .
+
+
+## 将caffe编译成分debug mode
+
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+## docker允许gdb进入进程
+
+docker run --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
+
+for example:
+
+docker run -itd --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -p 50002:22 -p 12345:12345 caffe/cpu /bin/bash
+
+## 升级自己都cmake
+
+```
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:george-edison55/cmake-3.x
+sudo apt-get update
+sudo apt-get install cmake
+//如果安装了cmake
+sudo apt-get upgrade
+```
+
+## clion 远程调试
+
+https://blog.csdn.net/weixin_37569048/article/details/88891648
+
+https://cloud.tencent.com/developer/article/1406250
+
+## 需要把gdb升级8.3
+
+https://stackoverflow.com/questions/51100753/visual-studio-2017-linux-remote-debugging-gdbserver

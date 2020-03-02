@@ -60,6 +60,8 @@ typedef int (*BrewFunction)();
 typedef std::map<caffe::string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
+//宏顶一个函数，ctrl+F查找下他如何使用
+//注册了四个，device_query，train，test，time
 #define RegisterBrewFunction(func) \
 namespace { \
 class __Registerer_##func { \
@@ -72,9 +74,12 @@ __Registerer_##func g_registerer_##func; \
 }
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
+  //点进去看看这g_brew_map
+  //一来判断name是否存在map里
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
+    //如果没有把其他动作都打印出来
     LOG(ERROR) << "Available caffe actions:";
     for (BrewMap::iterator it = g_brew_map.begin();
          it != g_brew_map.end(); ++it) {
@@ -436,6 +441,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
+      //最为核心的部分,点进去看
       return GetBrewFunction(caffe::string(argv[1]))();
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
