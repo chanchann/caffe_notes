@@ -233,6 +233,10 @@ sudo docker build -t c3d:v1 --rm=true .
 
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 
+or
+
+SET(CMAKE_BUILD_TYPE "Debug")
+
 ## docker允许gdb进入进程
 
 docker run --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
@@ -258,6 +262,25 @@ https://blog.csdn.net/weixin_37569048/article/details/88891648
 
 https://cloud.tencent.com/developer/article/1406250
 
+https://cloud.tencent.com/developer/article/1406250
+
 ## 需要把gdb升级8.3
 
 https://stackoverflow.com/questions/51100753/visual-studio-2017-linux-remote-debugging-gdbserver
+
+
+## 坑：gdb断点无法停止
+
+gdb挂在父进程上，而断点处的代码是在子进程中执行的。在gdb中设置set follow-fork-mode child使gdb既能调试父进程，又能调试子进程。
+
+linux 内核为了安全起见，采用了Seccomp(secure computing)的沙箱机制来保证系统不被破坏。它能使一个进程进入到一种“安全”运行模式，该模式下的进程只能调用4种系统调用（system calls），即read(), write(), exit()和sigreturn()，否则进程便会被终止。
+
+docker只有以--security-opt seccomp=unconfined的模式运行container才能利用GDB调试
+
+https://blog.csdn.net/whatday/article/details/99963575
+
+https://zhoubofsy.github.io/2019/09/24/linux/gdb-in-docker/
+
+# Atalas200
+
+https://www.xiaoblogs.cn/?p=72

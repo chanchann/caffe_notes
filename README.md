@@ -517,7 +517,7 @@ message SolverParameter
             "name" : "(gdb) Launch",
             "type" : "cppdbg",
             "request" : "launch",
-            "program": "${workspaceFolder}/build/tools/caffe",
+            "program": "${workspaceFolder}/build/tools/caffe-d",
             "args": ["train", "--solver", "${workspaceFolder}/examples/mnist/lenet_solver.prototxt"],
             "stopAtEntry" : false,
             "cwd" : "${workspaceFolder}",
