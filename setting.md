@@ -288,3 +288,17 @@ https://www.xiaoblogs.cn/?p=72
 ## caffe api
 
 https://caffe.berkeleyvision.org/doxygen/classcaffe_1_1Blob.html
+
+## fatal error: caffe/proto/caffe.pb.h: No such file or directory #105
+
+https://github.com/NVIDIA/DIGITS/issues/105
+
+## cublas_v2.h can't find #2704
+
+https://github.com/BVLC/caffe/issues/2704
+
+## cmake 调用caffe库
+
+https://blog.csdn.net/uniqueyyc/article/details/84954004
+
+https://blog.csdn.net/qq_26697045/article/details/86559521
