@@ -63,7 +63,7 @@ def main(*args, **kwargs):
           batch_size=50,
           auto_batch=False,
           log_dir=flags.train_url,
-          max_number_of_steps=1000,
+          max_number_of_steps=100000,
           log_every_n_steps=10,
           export_model=mox.ExportKeys.TF_SERVING)
 
