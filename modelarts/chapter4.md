@@ -8,6 +8,24 @@ ModelArts 底层采用容器技术，自定义镜像指的是用户自行制作�
 
 文中出现的英文缩略词意思分别为：SWR--华为云容器镜像服务，OBS--华为云对象存储服务。
 
+## 介绍
+
+## docker
+
+Docker是一个开源的引擎，可以轻松的为任何应用创建一个轻量级的、可移植的、自给自足的容器。容器镜像服务兼容原生Docker，支持使用Docker CLI和原生API管理容器镜像。了解更多的docker知识参考文档https://docs.docker.com/
+
+## swr
+
+容器镜像服务（Software Repository for Container，简称SWR）是一种支持镜像全生命周期管理的服务，提供简单易用、安全可靠的镜像管理功能，包括镜像的上传、下载、删除等。
+
+SWR提供私有镜像库，并支持细粒度的权限管理，可以为不同用户分配相应的访问权限（读取、编辑、管理）。SWR还支持容器镜像版本更新自动触发部署。您只需要为镜像设置一个触发器，通过触发器，可以在每次镜像版本更新时，自动更新云容器引擎（CCE）中使用该镜像部署的应用。
+
+您可以通过控制台、API使用容器镜像服务。
+
+![swr1](./assets/swr1.png)
+
+## 使用容器镜像服务
+
 2. 自定义镜像功能使用步骤
 
 ModelArts中使用自定义功能步骤如下：
@@ -256,4 +274,77 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 sudo docker run hello-world
 
 ![11](./assets/docker_hw.png)
+
+## 制作并上传自定义镜像
+
+1. 编写自定义镜像的 Dockerfile
+
+训练作业的自定义镜像需要以基础镜像为基础。根据``docker pull swr.<region>.myhuaweicloud.com/<image org>/custom-<processor type>-[<cuda version>]-base:<image tag>``格式。
+
+
+我们先编写Dockerfile文件。
+
+```
+FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-inner-moxing-cp36:1.2
+ENV BUILD_PATH /root/work
+
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U && \
+    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install --upgrade pip && pip --no-cache-dir install numpy==1.15 tensorflow-gpu==1.15 && \
+     echo success
+```
+
+![docker03](./assets/docker_03.png)
+
+
+![docker04](./assets/docker_04.png)
+
+## 推送镜像至SWR
+
+在SWR界面上创建一个组织，然后获取SWR登录指令.
+
+![docker05](./assets/docker_05.png)
+
+![docker06](./assets/docker_06.png)
+
+
+点击右上角登录指令,单击复制docker login指令。docker login指令末尾的域名即为当前镜像仓库地址，记录该地址。
+
+![docker07](./assets/docker_07.png)
+
+
+![docker08](./assets/docker_08.png)
+
+![docker09](./assets/docker_09.png)
+
+在安装docker的机器给test:v1镜像打标签。
+
+docker tag [镜像名称:版本名称] [镜像仓库地址]/[组织名称]/[镜像名称:版本名称]
+
+样例如下：
+
+sudo docker tag test:v1 swr.cn-north-4.myhuaweicloud.com/modelarts/test:v1
+
+其中：
+
+swr.cn-north-4.myhuaweicloud.com为容器镜像服务的镜像仓库地址。
+modelarts为组织名称，如果该组织还没有创建，容器镜像服务会根据组织名称自动创建一个组织。
+test:v1为镜像名称和版本号。
+
+上传镜像至镜像仓库。
+
+docker push [镜像仓库地址]/[组织名称]/[镜像名称:版本名称]
+
+样例如下：
+
+sudo docker push swr.cn-north-4.myhuaweicloud.com/modelarts/test:v1
+
+
+![docker11](./assets/docker_11.png)
+
+这样就上传成功了。
+
+## 在ModelArts中使用自定义镜像创建作业
+
+2.3.1 创建自定义镜像训练用户作业
 
