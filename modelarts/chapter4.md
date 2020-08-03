@@ -348,3 +348,83 @@ sudo docker push swr.cn-north-4.myhuaweicloud.com/modelarts/test:v1
 
 2.3.1 创建自定义镜像训练用户作业
 
+将“mnist_softmax.py”和训练数据上传至OBS。将脚本和数据都放在代码目录下，以便直接下载到容器中。
+
+启动脚本存储路径为：obs://obs-fashion/new/mnist/mnist_softmax.py 
+
+训练数据存储路径为：obs://modelarts2test/mnist/data
+
+```python 
+# mnist_softmax.py
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import argparse
+import sys
+
+import os
+from tensorflow.examples.tutorials.mnist import input_data
+
+import tensorflow as tf
+
+FLAGS = None
+
+
+def main(_):
+    # Import data
+
+    mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+    # Create the model
+    x = tf.placeholder(tf.float32, [None, 784])
+    W = tf.Variable(tf.zeros([784, 10]))
+    b = tf.Variable(tf.zeros([10]))
+    y = tf.matmul(x, W) + b
+
+    # Define loss and optimizer
+    y_ = tf.placeholder(tf.float32, [None, 10])
+
+    cross_entropy = tf.reduce_mean(
+        tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+    train_step = tf.compat.v1.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+    sess = tf.compat.v1.InteractiveSession()
+    tf.compat.v1.global_variables_initializer().run()
+    # Train
+    print('Training ................')
+    for _ in range(1000):
+        batch_xs, batch_ys = mnist.train.next_batch(100)
+        sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+
+    # Test trained model
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    print(sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                        y_: mnist.test.labels}))
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', '--data_url', type=str, default='/home/work/user-job-dir/fashion_data',
+                        help='Directory for storing input data')
+    FLAGS, unparsed = parser.parse_known_args()
+    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+```
+
+创建自定义镜像训练作业，“镜像地址”、“代码目录”和“运行命令”参考如下信息填写，“数据存储位置”和“训练输出位置”请根据实际情况填写。
+“镜像地址”：填写刚上传镜像的“SWR_URL”。
+“代码目录”：选择存储在OBS的训练代码。例如“obs://obs-fashion/new/mnist/ ”为代码根目录，“obs://obs-fashion/new/mnist/mnist_softmax.py”为代码启动文件。
+在训练作业实际启动之前，ModelArts自动将“代码目录”下的所有内容递归下载到本地路径，存放代码的本地路径为 “${ModelArts 训练固定的工作目录}/${代码根目录的最后一级名称}”。当前“${ModelArts 训练固定的工作目录}” 为 “/home/work/user-job-dir”。例如，“代码目录”选择“obs://obs-fashion/new/mnist/”时，本地代码目录对应为“/home/work/user-job-dir/mnist/”，代码启动文件位于 /home/work/user-job-dir/mnist/mnist_softmax.py。
+
+“运行命令”：
+bash /home/work/run_train.sh python /home/work/user-job-dir/mnist/mnist_softmax.py --data_url /home/work/user-job-dir/mnist/data
+
+
+
+其中，“/home/work/user-job-dir/mnist/mnist_softmax.py”为下载下来训练脚本的位置，“--data_url /home/work/user-job-dir/mnist/data”为数据的位置。由于已经把数据放在代码目录中，容器已经下载了代码目录，所以直接使用本地的。
+
+![kernel_02](./assets/kernel_02.png)
+
+
+
+
+

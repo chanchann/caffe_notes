@@ -32,3 +32,19 @@ https://support.huaweicloud.com/engineers-modelarts/modelarts_23_0088.html
 https://support.huaweicloud.com/engineers-modelarts/modelarts_23_0088.html#modelarts_23_0088__li11403152725518
 
 
+
+bash /home/work/run_train.sh python /home/work/user-job-dir/new/mnist_tf15/fashion_code/mnist_softmax.py --data_url /home/work/user-job-dir/mnist_tf15/fashion_data;
+
+
+FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-cpu-base:1.2
+
+ENV BUILD_PATH /root/work
+
+RUN  pip --no-cache-dir install tensorflow==1.8.0 -i https://pypi.tuna.tsinghua.edu.cn/simple&& \
+     echo success
+
+
+     bash /home/work/run_train.sh python /home/work/user-job-dir/mnist/mnist_softmax.py --data_url /home/work/user-job-dir/mnist/data
+
+
+
