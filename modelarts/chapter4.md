@@ -415,10 +415,6 @@ if __name__ == '__main__':
 “代码目录”：选择存储在OBS的训练代码。例如“obs://obs-fashion/new/mnist/ ”为代码根目录，“obs://obs-fashion/new/mnist/mnist_softmax.py”为代码启动文件。
 在训练作业实际启动之前，ModelArts自动将“代码目录”下的所有内容递归下载到本地路径，存放代码的本地路径为 “${ModelArts 训练固定的工作目录}/${代码根目录的最后一级名称}”。当前“${ModelArts 训练固定的工作目录}” 为 “/home/work/user-job-dir”。例如，“代码目录”选择“obs://obs-fashion/new/mnist/”时，本地代码目录对应为“/home/work/user-job-dir/mnist/”，代码启动文件位于 /home/work/user-job-dir/mnist/mnist_softmax.py。
 
-“运行命令”：
-bash /home/work/run_train.sh python /home/work/user-job-dir/mnist/mnist_softmax.py --data_url /home/work/user-job-dir/mnist/data
-
-
 
 其中，“/home/work/user-job-dir/mnist/mnist_softmax.py”为下载下来训练脚本的位置，“--data_url /home/work/user-job-dir/mnist/data”为数据的位置。由于已经把数据放在代码目录中，容器已经下载了代码目录，所以直接使用本地的。
 
